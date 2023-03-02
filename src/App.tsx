@@ -1,6 +1,7 @@
 import * as React from "react";
 import { ChakraProvider, theme } from "@chakra-ui/react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const Home = React.lazy(() => import("./pages/Home"));
 const Lobby = React.lazy(() => import("./pages/Lobby"));
@@ -8,6 +9,8 @@ const Game = React.lazy(() => import("./pages/Game"));
 const Result = React.lazy(() => import("./pages/Result"));
 
 export const App = () => {
+    const queryClient = new QueryClient();
+
     const router = createBrowserRouter([
         { path: "/", element: <Home /> },
         { path: "/lobby", element: <Lobby /> },
@@ -16,8 +19,10 @@ export const App = () => {
         { path: "*", element: <h1>Not Available</h1> },
     ]);
     return (
-        <ChakraProvider theme={theme}>
-            <RouterProvider router={router} />
-        </ChakraProvider>
+        <QueryClientProvider client={queryClient}>
+            <ChakraProvider theme={theme}>
+                <RouterProvider router={router} />
+            </ChakraProvider>
+        </QueryClientProvider>
     );
 };

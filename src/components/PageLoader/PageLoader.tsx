@@ -1,6 +1,5 @@
 import { Center, Spinner } from "@chakra-ui/react";
 
-
 export const PageLoader = () => {
     return <Center>
         <Spinner thickness='4px'
