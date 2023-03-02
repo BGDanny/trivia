@@ -1,30 +1,21 @@
 import * as React from "react";
-import {
-    ChakraProvider,
-    VStack,
-    theme,
-    Heading,
-    Button,
-    Input,
-} from "@chakra-ui/react";
+import { ChakraProvider, theme } from "@chakra-ui/react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Home from "./pages/Home";
+import Lobby from "./pages/Lobby";
+import Game from "./pages/Game";
+import Result from "./pages/Result";
 
 export const App = () => {
-    const [code, setCode] = React.useState("");
+    const router = createBrowserRouter([
+        { path: "/", element: <Home /> },
+        { path: "/lobby", element: <Lobby /> },
+        { path: "/game", element: <Game /> },
+        { path: "/result", element: <Result /> },
+    ]);
     return (
         <ChakraProvider theme={theme}>
-            <VStack textAlign="center" fontSize="xl">
-                <Heading>Trivia</Heading>
-                <Button>
-                    {code ? "Join Lobby with Code" : "Create Lobby"}
-                </Button>
-                <Input
-                    placeholder="Lobby Code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    type="text"
-                    w={"min"}
-                />
-            </VStack>
+            <RouterProvider router={router} />
         </ChakraProvider>
     );
 };
