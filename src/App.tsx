@@ -13,6 +13,7 @@ export const App = () => {
         { path: "/lobby", element: <Lobby /> },
         { path: "/game", element: <Game /> },
         { path: "/result", element: <Result /> },
+        { path: "*", element: <h1>Not Available</h1> },
     ]);
     return (
         <ChakraProvider theme={theme}>
