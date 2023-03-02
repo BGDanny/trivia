@@ -46,13 +46,15 @@ export const Game: React.FC = () => {
 
     let [userAnswer, setUserAnswer] = React.useState<string | undefined>(undefined);
 
+    let [score, setScore] = React.useState(0);
+
     React.useEffect(() => {
         if (alertTrigger) {
             let timeout = setTimeout(() => {
                 setAlertTrigger(false);
                 setUserAnswer(undefined);
                 setQuestionIndex(++questionIndex);
-            }, 2000);
+            }, 1000);
             return () => clearTimeout(timeout);
         }
         return;
@@ -61,12 +63,15 @@ export const Game: React.FC = () => {
     if (data) {
         if (questionIndex > questionAmount - 1)
             return (<Center>
-                <Heading>You finished this trivia!</Heading>
+                <VStack>
+                    <Heading>You finished this trivia! </Heading>
+                    <Heading as="h4">Your score is {score} / {questionAmount}</Heading>
+                </VStack>
             </Center>)
 
         const trivia = data.results[questionIndex];
         const results = trivia.incorrect_answers.concat(trivia.correct_answer);
-        shuffleArray(results);
+
         return (
             <Box>
                 <Badge>{questionIndex + 1}/{questionAmount}</Badge>
@@ -85,6 +90,8 @@ export const Game: React.FC = () => {
                             if (userAnswer === undefined) {
                                 setAlertTrigger(true);
                                 setUserAnswer(ans);
+                                if (userAnswer !== trivia.correct_answer)
+                                    setScore(++score);
                             }
                         }}
                     >
