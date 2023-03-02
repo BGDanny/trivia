@@ -42,6 +42,22 @@ export const Game: React.FC = () => {
 
     let [questionIndex, setQuestionIndex] = React.useState(0);
 
+    const [alertTrigger, setAlertTrigger] = React.useState(false);
+
+    let [userAnswer, setUserAnswer] = React.useState<string | undefined>(undefined);
+
+    React.useEffect(() => {
+        if (alertTrigger) {
+            let timeout = setTimeout(() => {
+                setAlertTrigger(false);
+                setUserAnswer(undefined);
+                setQuestionIndex(++questionIndex);
+            }, 2000);
+            return () => clearTimeout(timeout);
+        }
+        return;
+    }, [alertTrigger]);
+
     if (data) {
         if (questionIndex > questionAmount - 1)
             return (<Center>
@@ -62,15 +78,21 @@ export const Game: React.FC = () => {
                     // Response from trivia may contains special HTML character that needs to be decoded
                     <Heading>{htmlDecode(data.results[questionIndex].question)}</Heading>
                     {results.map(ans => <Button
+                        colorScheme={userAnswer === undefined ? 'blue' : ans === trivia.correct_answer ? 'green' : 'red'}
+                        disabled={userAnswer !== undefined}
                         key={ans}
                         onClick={() => {
-                            setQuestionIndex(++questionIndex);
+                            if (userAnswer === undefined) {
+                                setAlertTrigger(true);
+                                setUserAnswer(ans);
+                            }
                         }}
                     >
                         {ans}
                     </Button>)}
                 </VStack>
-            </Box>
+                {alertTrigger && userAnswer !== undefined && <AnswerStatus correctAnswer={trivia.correct_answer} userAnswer={userAnswer} />}
+            </Box >
         );
     }
     return <PageLoader />;
