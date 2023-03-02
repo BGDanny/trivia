@@ -1,7 +1,7 @@
 import * as React from "react";
 import { VStack, Heading, Button, Input } from "@chakra-ui/react";
 
-const Home: React.FC = () => {
+export const Home: React.FC = () => {
     const [code, setCode] = React.useState("");
     return (
         <VStack textAlign="center" fontSize="xl">
@@ -17,5 +17,3 @@ const Home: React.FC = () => {
         </VStack>
     );
 };
-
-export default Home;

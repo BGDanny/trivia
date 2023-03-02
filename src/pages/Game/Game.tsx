@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 
-const Game: React.FC = () => {
+export const Game: React.FC = () => {
     return (
         <Box>
             <Badge>1/10</Badge>
@@ -29,5 +29,3 @@ const Game: React.FC = () => {
         </Box>
     );
 };
-
-export default Game;

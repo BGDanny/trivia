@@ -9,7 +9,7 @@ import {
     Td,
 } from "@chakra-ui/react";
 
-const Result: React.FC = () => {
+export const Result: React.FC = () => {
     return (
         <Table>
             <TableCaption>Scoreboard</TableCaption>
@@ -40,5 +40,3 @@ const Result: React.FC = () => {
         </Table>
     );
 };
-
-export default Result;

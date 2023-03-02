@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Tag, SimpleGrid, Box, Heading, Button } from "@chakra-ui/react";
 
-const Lobby: React.FC = () => {
+export const Lobby: React.FC = () => {
     return (
         <Box textAlign={"center"}>
             <Heading>Lobby</Heading>
@@ -15,5 +15,3 @@ const Lobby: React.FC = () => {
         </Box>
     );
 };
-
-export default Lobby;
