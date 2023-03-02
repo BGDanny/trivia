@@ -90,7 +90,7 @@ export const Game: React.FC = () => {
                             if (userAnswer === undefined) {
                                 setAlertTrigger(true);
                                 setUserAnswer(ans);
-                                if (userAnswer !== trivia.correct_answer)
+                                if (ans === trivia.correct_answer)
                                     setScore(++score);
                             }
                         }}
