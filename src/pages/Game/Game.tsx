@@ -20,29 +20,44 @@ const htmlDecode = (input: string) => {
     return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
 }
 
+// The folloing code shuffle answers using Fisher and Yates' algorithm
+// Refer https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
+// for more detail
+const shuffleArray = (array: string[]) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 export const Game: React.FC = () => {
     const { data } = useMcQuestions({
         amount: 10,
         difficulty: "easy",
     });
-    if (data)
+
+    const [questionIndex, setQuestionIndex] = React.useState(0);
+
+    if (data) {
+        const trivia = data.results[questionIndex];
+        const results = trivia.incorrect_answers.concat(trivia.correct_answer);
+        shuffleArray(results);
         return (
             <Box>
-                <Badge>1/10</Badge>
+                <Badge>{questionIndex + 1}/10</Badge>
                 <Tag float={"right"}>
                     <TagLeftIcon as={TimeIcon} />
                     <TagLabel>0:30</TagLabel>
                 </Tag>
                 <VStack textAlign="center" fontSize="xl">
                     // Response from trivia may contains special HTML character that needs to be decoded
-                    <Heading>{htmlDecode(data.results[0].question)}</Heading>
-                    <Button>11</Button>
-                    <Button>12</Button>
-                    <Button>13</Button>
-                    <Button>14</Button>
+                    <Heading>{htmlDecode(data.results[questionIndex].question)}</Heading>
+                    {results.map(ans => <Button>{ans}</Button>)}
                 </VStack>
             </Box>
         );
+    }
+
 
     return <PageLoader />;
 };
