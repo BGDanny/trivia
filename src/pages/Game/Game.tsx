@@ -8,10 +8,12 @@ import {
     Tag,
     TagLeftIcon,
     TagLabel,
+    Center,
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { useMcQuestions } from "../../hooks/useMcQuestions";
 import PageLoader from "../../components/PageLoader";
+import { AnswerStatus } from "./AnswerStatus";
 
 const htmlDecode = (input: string) => {
     var e = document.createElement('textarea');
@@ -31,20 +33,27 @@ const shuffleArray = (array: string[]) => {
 }
 
 export const Game: React.FC = () => {
+    const questionAmount = 10;
+
     const { data } = useMcQuestions({
-        amount: 10,
+        amount: questionAmount,
         difficulty: "easy",
     });
 
-    const [questionIndex, setQuestionIndex] = React.useState(0);
+    let [questionIndex, setQuestionIndex] = React.useState(0);
 
     if (data) {
+        if (questionIndex > questionAmount - 1)
+            return (<Center>
+                <Heading>You finished this trivia!</Heading>
+            </Center>)
+
         const trivia = data.results[questionIndex];
         const results = trivia.incorrect_answers.concat(trivia.correct_answer);
         shuffleArray(results);
         return (
             <Box>
-                <Badge>{questionIndex + 1}/10</Badge>
+                <Badge>{questionIndex + 1}/{questionAmount}</Badge>
                 <Tag float={"right"}>
                     <TagLeftIcon as={TimeIcon} />
                     <TagLabel>0:30</TagLabel>
@@ -52,12 +61,17 @@ export const Game: React.FC = () => {
                 <VStack textAlign="center" fontSize="xl">
                     // Response from trivia may contains special HTML character that needs to be decoded
                     <Heading>{htmlDecode(data.results[questionIndex].question)}</Heading>
-                    {results.map(ans => <Button>{ans}</Button>)}
+                    {results.map(ans => <Button
+                        key={ans}
+                        onClick={() => {
+                            setQuestionIndex(++questionIndex);
+                        }}
+                    >
+                        {ans}
+                    </Button>)}
                 </VStack>
             </Box>
         );
     }
-
-
     return <PageLoader />;
 };
