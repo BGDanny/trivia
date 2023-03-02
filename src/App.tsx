@@ -9,7 +9,13 @@ const Game = React.lazy(() => import("./pages/Game"));
 const Result = React.lazy(() => import("./pages/Result"));
 
 export const App = () => {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                refetchOnWindowFocus: false,
+            },
+        },
+    });
 
     const router = createBrowserRouter([
         { path: "/", element: <Home /> },
