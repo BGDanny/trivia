@@ -2,6 +2,7 @@ import * as React from "react";
 import { ChakraProvider, theme } from "@chakra-ui/react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
+import "./index.css";
 
 const Home = React.lazy(() => import("./pages/Home"));
 const Lobby = React.lazy(() => import("./pages/Lobby"));

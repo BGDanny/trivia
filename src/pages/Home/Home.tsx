@@ -22,7 +22,7 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import * as React from "react";
-import BackgroundImage from "../../assets/pexels.jpg";
+import TextColor from "../../assets/textColor.jpg";
 
 export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
     const [isOpen, setOpen] = React.useState(false);
@@ -31,8 +31,8 @@ export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
     return (
         <Box>
             <VStack spacing={20} textAlign={"center"}>
-                <Box
-                    backgroundImage={BackgroundImage}
+            <Box
+                    backgroundImage={TextColor}
                     bgRepeat="no-repeat"
                     backgroundSize="cover"
                     width="100%"
