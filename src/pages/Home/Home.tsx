@@ -22,16 +22,35 @@ import {
     VStack,
 } from "@chakra-ui/react";
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import TextColor from "../../assets/textColor.jpg";
 
 export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
     const [isOpen, setOpen] = React.useState(false);
     const [code, setCode] = React.useState("");
     const [username, setUsername] = React.useState("");
+    const usernameRef = React.useRef("");
+    const navi = useNavigate();
+
+    usernameRef.current = username;
+
+    socket.addEventListener("message", (e) => {
+        const message = e.data as string;
+        if (message.includes("Access Code")) {
+            navi("/lobby", {
+                state: {
+                    code: message.match(/:(.+)/)![1],
+                    username: usernameRef.current,
+                },
+            });
+        } else if (message.includes("Join Success")) {
+            navi("/lobby", { state: { code, username: usernameRef.current } });
+        }
+    });
     return (
         <Box>
             <VStack spacing={20} textAlign={"center"}>
-            <Box
+                <Box
                     backgroundImage={TextColor}
                     bgRepeat="no-repeat"
                     backgroundSize="cover"
@@ -103,7 +122,6 @@ export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
                 isOpen={isOpen}
                 onClose={() => {
                     setOpen(false);
-                    setUsername("");
                 }}
                 isCentered
             >
