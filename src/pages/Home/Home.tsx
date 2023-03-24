@@ -24,29 +24,28 @@ import {
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import TextColor from "../../assets/textColor.jpg";
+import { SocketProps } from "../../types";
 
-export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
+export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
     const [isOpen, setOpen] = React.useState(false);
     const [code, setCode] = React.useState("");
     const [username, setUsername] = React.useState("");
-    const usernameRef = React.useRef("");
     const navi = useNavigate();
 
-    usernameRef.current = username;
-
-    socket.addEventListener("message", (e) => {
-        const message = e.data as string;
+    React.useEffect(() => {
+        const message = lastMessage?.data as string || "";
         if (message.includes("Access Code")) {
             navi("/lobby", {
                 state: {
                     code: message.match(/:(.+)/)![1],
-                    username: usernameRef.current,
+                    username,
                 },
             });
         } else if (message.includes("Join Success")) {
-            navi("/lobby", { state: { code, username: usernameRef.current } });
+            navi("/lobby", { state: { code, username } });
         }
-    });
+    }, [lastMessage, code, username, navi]);
+
     return (
         <Box>
             <VStack spacing={20} textAlign={"center"}>
@@ -144,11 +143,11 @@ export const Home: React.FC<{ socket: WebSocket }> = ({ socket }) => {
                             colorScheme="teal"
                             onClick={() => {
                                 if (code) {
-                                    socket.send(
+                                    sendMessage(
                                         `Join Room:${username}:${code}`
                                     );
                                 } else {
-                                    socket.send("Create Room:" + username);
+                                    sendMessage("Create Room:" + username);
                                 }
                             }}
                         >

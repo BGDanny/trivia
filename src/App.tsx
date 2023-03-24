@@ -7,15 +7,12 @@ import Home from "./pages/Home";
 import Lobby from "./pages/Lobby";
 import Game from "./pages/Game";
 import Result from "./pages/Result";
+import useWebSocket from "react-use-websocket";
 
 // const Home = React.lazy(() => import("./pages/Home"));
 // const Lobby = React.lazy(() => import("./pages/Lobby"));
 // const Game = React.lazy(() => import("./pages/Game"));
 // const Result = React.lazy(() => import("./pages/Result"));
-
-const socket = new WebSocket("ws://68.146.50.113:8000/ws");
-
-socket.addEventListener("message", (e) => console.log(e.data));
 
 export const App = () => {
     const queryClient = new QueryClient({
@@ -26,13 +23,31 @@ export const App = () => {
         },
     });
 
+    const { sendMessage, lastMessage } = useWebSocket(
+        "ws://68.146.50.113:8000/ws"
+    );
+
     const router = createBrowserRouter([
-        { path: "/", element: <Home socket={socket} /> },
-        { path: "/lobby", element: <Lobby socket={socket} /> },
+        {
+            path: "/",
+            element: (
+                <Home sendMessage={sendMessage} lastMessage={lastMessage} />
+            ),
+        },
+        {
+            path: "/lobby",
+            element: (
+                <Lobby sendMessage={sendMessage} lastMessage={lastMessage} />
+            ),
+        },
         { path: "/game", element: <Game /> },
         { path: "/result", element: <Result /> },
         { path: "*", element: <h1>Not Available</h1> },
     ]);
+
+    React.useEffect(() => {
+        if (lastMessage) console.log(lastMessage.data);
+    }, [lastMessage]);
 
     return (
         <QueryClientProvider client={queryClient}>
