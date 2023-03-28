@@ -14,44 +14,73 @@ import { SocketProps } from "../../types";
 
 export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
     const {
-        state: { username, code },
+        state: { usernames, code },
     } = useLocation();
     const toast = useToast();
-    const [users, setUsers] = React.useState<string[]>([username]);
+    const [users, setUsers] = React.useState<
+        Array<{ username: string; isReady: boolean }>
+    >(usernames.map((username: string) => ({ username, isReady: false })));
+    const [isLoading, setLoading] = React.useState(false);
+    const [isDisabled, setDisabled] = React.useState(false);
+    const currentUser = React.useRef(usernames[usernames.length - 1]);
 
     React.useEffect(() => {
         const message = (lastMessage?.data as string) || "";
         if (message.includes("User Join")) {
-            setUsers((prev) => [...prev, message.match(/:(.+)/)![1]]);
+            setUsers((prev) => [
+                ...prev,
+                { username: message.match(/:(.+)/)![1], isReady: false },
+            ]);
+        } else if (message.includes("Ready Success")) {
+            const username = message.match(/:(.+)/)![1];
+            if (username === currentUser.current) {
+                setLoading(false);
+                setDisabled(true);
+                toast({
+                    title: "You are ready",
+                    description:
+                        "Waiting for everyone else in the lobby to get ready",
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+            setUsers((prev) =>
+                prev.map((user) => {
+                    if (user.username === username) {
+                        return { ...user, isReady: true };
+                    } else {
+                        return user;
+                    }
+                })
+            );
         }
-    }, [lastMessage, setUsers]);
+    }, [lastMessage, setUsers, toast]);
 
     return (
         <Box textAlign={"center"}>
-            <Heading>Lobby:{code}</Heading>
+            <Heading>Lobby - {code}</Heading>
             <SimpleGrid columns={2} spacing={5} my={5}>
                 {users?.map((user, index) => (
                     <Tag key={index} justifyContent="space-evenly" p={3}>
                         <TagLabel fontSize={40} lineHeight="tall">
-                            {user}
+                            {user.username}
                         </TagLabel>
-                        <Badge colorScheme={"red"} fontSize="20">
-                            Not Ready
+                        <Badge
+                            colorScheme={user.isReady ? "green" : "red"}
+                            fontSize="20"
+                        >
+                            {user.isReady ? "Ready" : "Not Ready"}
                         </Badge>
                     </Tag>
                 ))}
             </SimpleGrid>
             <Button
+                isLoading={isLoading}
+                isDisabled={isDisabled}
                 onClick={() => {
-                    sendMessage(`Ready:${username}:${code}`);
-                    toast({
-                        title: "You are ready",
-                        description:
-                            "Waiting for everyone else in the lobby to get ready",
-                        status: "success",
-                        duration: 5000,
-                        isClosable: true,
-                    });
+                    setLoading(true);
+                    sendMessage(`Ready:${currentUser.current}:${code}`);
                 }}
                 colorScheme="green"
                 w={40}

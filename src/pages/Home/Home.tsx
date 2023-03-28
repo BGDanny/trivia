@@ -33,16 +33,24 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
     const navi = useNavigate();
 
     React.useEffect(() => {
-        const message = lastMessage?.data as string || "";
+        const message = (lastMessage?.data as string) || "";
         if (message.includes("Access Code")) {
             navi("/lobby", {
                 state: {
                     code: message.match(/:(.+)/)![1],
-                    username,
+                    usernames: [username],
                 },
             });
         } else if (message.includes("Join Success")) {
-            navi("/lobby", { state: { code, username } });
+            navi("/lobby", {
+                state: {
+                    code,
+                    usernames: [
+                        ...message.match(/:(.+)/)![1].split(","),
+                        username,
+                    ],
+                },
+            });
         }
     }, [lastMessage, code, username, navi]);
 
