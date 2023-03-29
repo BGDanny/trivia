@@ -9,7 +9,7 @@ import {
     TagLabel,
     Badge,
 } from "@chakra-ui/react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SocketProps } from "../../types";
 
 export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
@@ -17,12 +17,13 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
         state: { usernames, code },
     } = useLocation();
     const toast = useToast();
+    const navi = useNavigate();
     const [users, setUsers] = React.useState<
         Array<{ username: string; isReady: boolean }>
     >(usernames.map((username: string) => ({ username, isReady: false })));
     const [isLoading, setLoading] = React.useState(false);
     const [isDisabled, setDisabled] = React.useState(false);
-    const currentUser = React.useRef(usernames[usernames.length - 1]);
+    const currentUser = React.useRef(usernames[0]);
 
     React.useEffect(() => {
         const message = (lastMessage?.data as string) || "";
@@ -54,8 +55,27 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                     }
                 })
             );
+        } else if (message.includes("All Ready")) {
+            const question1 = JSON.parse(message.match(/:(.+)/)![1]);
+            toast({
+                title: "Everyone is ready",
+                description:
+                    "You will be redirected to the game page in 3 seconds",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            setTimeout(() => {
+                navi("/game", {
+                    state: {
+                        question1,
+                        code,
+                        username: usernames[0],
+                    },
+                });
+            }, 3000);
         }
-    }, [lastMessage, setUsers, toast]);
+    }, [lastMessage, setUsers, toast, navi, code, usernames]);
 
     return (
         <Box textAlign={"center"}>

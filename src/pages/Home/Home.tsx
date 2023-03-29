@@ -46,8 +46,8 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
                 state: {
                     code,
                     usernames: [
-                        ...message.match(/:(.+)/)![1].split(","),
                         username,
+                        ...message.match(/:(.+)/)![1].split(","),
                     ],
                 },
             });

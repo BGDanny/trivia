@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ChakraProvider, theme, Box } from "@chakra-ui/react";
+import { ChakraProvider, theme, Box, useToast } from "@chakra-ui/react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "react-query";
 import Background from "./assets/bg.jpg";
@@ -15,6 +15,7 @@ import useWebSocket from "react-use-websocket";
 // const Result = React.lazy(() => import("./pages/Result"));
 
 export const App = () => {
+    const toast = useToast();
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: {
@@ -40,14 +41,31 @@ export const App = () => {
                 <Lobby sendMessage={sendMessage} lastMessage={lastMessage} />
             ),
         },
-        { path: "/game", element: <Game /> },
+        {
+            path: "/game",
+            element: (
+                <Game sendMessage={sendMessage} lastMessage={lastMessage} />
+            ),
+        },
         { path: "/result", element: <Result /> },
         { path: "*", element: <h1>Not Available</h1> },
     ]);
 
     React.useEffect(() => {
-        if (lastMessage) console.log(lastMessage.data);
-    }, [lastMessage]);
+        const message = (lastMessage?.data as string) || "";
+        if (message) {
+            if (message.startsWith("Error:")) {
+                toast({
+                    title: "Error",
+                    description: message.match(/:(.+)/)![1],
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                });
+            }
+            console.log(message);
+        }
+    }, [lastMessage, toast]);
 
     return (
         <QueryClientProvider client={queryClient}>
