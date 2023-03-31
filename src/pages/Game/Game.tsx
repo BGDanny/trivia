@@ -19,11 +19,12 @@ import {
     TableContainer,
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { SocketProps } from "../../types";
 import Countdown from "react-countdown";
 
 export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
+    const navi = useNavigate();
     const totalQuestions = 10;
     const {
         state: { question1, code, username },
@@ -57,12 +58,14 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                                 </Tr>
                             </Thead>
                             <Tbody>
-                                {leaderboard.map((user, index) => (
-                                    <Tr key={index}>
-                                        <Td>{user.username}</Td>
-                                        <Td>{user.points}</Td>
-                                    </Tr>
-                                ))}
+                                {leaderboard
+                                    .sort((a, b) => +b.points - +a.points)
+                                    .map((user, index) => (
+                                        <Tr key={index}>
+                                            <Td>{user.username}</Td>
+                                            <Td>{user.points}</Td>
+                                        </Tr>
+                                    ))}
                             </Tbody>
                         </Table>
                     </TableContainer>
@@ -71,14 +74,19 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                 duration: 5000,
                 isClosable: true,
                 variant: "subtle",
+                position: "bottom-right",
             });
             setTimeout(() => {
                 setQuestion(JSON.parse(message.match(/:(.+)/)![1]));
                 setQuestionIndex((prev) => ++prev);
                 setButtonDisabled(false);
             }, 5000);
+        } else if (message.startsWith("Game Over:")) {
+            navi("/result", {
+                state: JSON.parse(message.match(/:(.+)/)![1]),
+            });
         }
-    }, [lastMessage, toast]);
+    }, [lastMessage, toast, navi]);
 
     return (
         <Box>

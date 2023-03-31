@@ -8,11 +8,15 @@ import {
     Tbody,
     Td,
 } from "@chakra-ui/react";
+import { useLocation } from "react-router-dom";
 
 export const Result: React.FC = () => {
+    const { state } = useLocation();
+    const leaderboard: Array<{ username: string; points: string }> =
+        state.leaderboard;
     return (
         <Table>
-            <TableCaption>Scoreboard</TableCaption>
+            <TableCaption>LeaderBoard</TableCaption>
             <Thead>
                 <Tr>
                     <Th>Username</Th>
@@ -20,22 +24,14 @@ export const Result: React.FC = () => {
                 </Tr>
             </Thead>
             <Tbody>
-                <Tr>
-                    <Td>Long Tran</Td>
-                    <Td>5</Td>
-                </Tr>
-                <Tr>
-                    <Td>Kameshwara Sekar</Td>
-                    <Td>0</Td>
-                </Tr>
-                <Tr>
-                    <Td>Viet Long</Td>
-                    <Td>3</Td>
-                </Tr>
-                <Tr>
-                    <Td>Apostolos</Td>
-                    <Td>10</Td>
-                </Tr>
+                {leaderboard
+                    .sort((a, b) => +b.points - +a.points)
+                    .map((user, index) => (
+                        <Tr key={index}>
+                            <Td>{user.username}</Td>
+                            <Td>{user.points}</Td>
+                        </Tr>
+                    ))}
             </Tbody>
         </Table>
     );
