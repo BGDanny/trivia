@@ -8,12 +8,20 @@ import {
     Tag,
     TagLeftIcon,
     TagLabel,
-    Center,
     useToast,
+    Table,
+    TableCaption,
+    Thead,
+    Tr,
+    Th,
+    Tbody,
+    Td,
+    TableContainer,
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { useLocation } from "react-router-dom";
 import { SocketProps } from "../../types";
+import Countdown from "react-countdown";
 
 export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
     const totalQuestions = 10;
@@ -32,18 +40,43 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
     React.useEffect(() => {
         const message = (lastMessage?.data as string) || "";
         if (message.startsWith("Everyone Responded:")) {
+            const leaderboard: Array<{ username: string; points: string }> =
+                JSON.parse(message.match(/:(.+)/)![1]).leaderboard;
             toast({
-                title: "Everyone Responded",
-                description: "The next question will appear in 3 seconds",
+                title: "The next question will appear in 5 seconds",
+                description: (
+                    <TableContainer>
+                        <Table colorScheme={"whiteAlpha"}>
+                            <TableCaption placement="top" fontSize={"large"}>
+                                Current Scoreboard
+                            </TableCaption>
+                            <Thead>
+                                <Tr>
+                                    <Th>Username</Th>
+                                    <Th>Score</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                {leaderboard.map((user, index) => (
+                                    <Tr key={index}>
+                                        <Td>{user.username}</Td>
+                                        <Td>{user.points}</Td>
+                                    </Tr>
+                                ))}
+                            </Tbody>
+                        </Table>
+                    </TableContainer>
+                ),
                 status: "info",
-                duration: 3000,
+                duration: 5000,
                 isClosable: true,
+                variant: "subtle",
             });
             setTimeout(() => {
                 setQuestion(JSON.parse(message.match(/:(.+)/)![1]));
                 setQuestionIndex((prev) => ++prev);
                 setButtonDisabled(false);
-            }, 3000);
+            }, 5000);
         }
     }, [lastMessage, toast]);
 
@@ -54,9 +87,29 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             </Badge>
             <Tag float={"right"}>
                 <TagLeftIcon as={TimeIcon} />
-                <TagLabel>0:30</TagLabel>
+                <TagLabel>
+                    <Countdown
+                        date={Date.now() + 10000}
+                        onComplete={() => {
+                            setButtonDisabled(true);
+                            sendMessage(`Answer:${username}:${code}:No Answer`);
+                            toast({
+                                title: "You failed to answer within the time limit",
+                                status: "error",
+                                duration: 3000,
+                                isClosable: true,
+                            });
+                        }}
+                        key={questionIndex}
+                        renderer={({ formatted }) => (
+                            <span>
+                                {formatted.minutes}:{formatted.seconds}
+                            </span>
+                        )}
+                    />
+                </TagLabel>
             </Tag>
-            <VStack textAlign="center" fontSize="xl">
+            <VStack textAlign="center" fontSize="large">
                 <Heading>{currentQuestion.question}</Heading>
                 {currentQuestion.options.map((option, index) => (
                     <Button
@@ -75,15 +128,25 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                         h="auto"
                         py={5}
                         onClick={() => {
-                            sendMessage(`Answer:${username}:${code}:${option}`);
                             setButtonDisabled(true);
-                            toast({
-                                title: "You have submitted the answer",
-                                description: `The next question will appear once everyone submits their answer`,
-                                status: "success",
-                                duration: 3000,
-                                isClosable: true,
-                            });
+                            sendMessage(`Answer:${username}:${code}:${option}`);
+                            if (currentQuestion.answer === option) {
+                                toast({
+                                    title: "You selected the correct option :)",
+                                    description: `The answer is indeed ${currentQuestion.answer}`,
+                                    status: "success",
+                                    duration: 3000,
+                                    isClosable: true,
+                                });
+                            } else {
+                                toast({
+                                    title: "You answered incorrectly :(",
+                                    description: `The correct answer is ${currentQuestion.answer}`,
+                                    status: "error",
+                                    duration: 3000,
+                                    isClosable: true,
+                                });
+                            }
                         }}
                     >
                         {option}
