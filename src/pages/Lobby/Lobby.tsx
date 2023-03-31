@@ -27,12 +27,12 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
 
     React.useEffect(() => {
         const message = (lastMessage?.data as string) || "";
-        if (message.includes("User Join")) {
+        if (message.startsWith("User Join")) {
             setUsers((prev) => [
                 ...prev,
                 { username: message.match(/:(.+)/)![1], isReady: false },
             ]);
-        } else if (message.includes("Ready Success")) {
+        } else if (message.startsWith("Ready Success")) {
             const username = message.match(/:(.+)/)![1];
             if (username === currentUser.current) {
                 setLoading(false);
@@ -55,7 +55,12 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                     }
                 })
             );
-        } else if (message.includes("All Ready")) {
+        } else if (message.startsWith("All Ready")) {
+            setUsers((prev) =>
+                prev.map((user) => {
+                    return { ...user, isReady: true };
+                })
+            );
             const question1 = JSON.parse(message.match(/:(.+)/)![1]);
             toast({
                 title: "Everyone is ready",
@@ -74,6 +79,12 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                     },
                 });
             }, 3000);
+        } else if (message.startsWith("Lobby Disconnect")) {
+            setUsers((prev) =>
+                prev.filter(
+                    (user) => user.username !== message.match(/:(.+)/)![1]
+                )
+            );
         }
     }, [lastMessage, setUsers, toast, navi, code, usernames]);
 
