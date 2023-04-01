@@ -44,7 +44,17 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             const leaderboard: Array<{ username: string; points: string }> =
                 JSON.parse(message.match(/:(.+)/)![1]).leaderboard;
             toast({
-                title: "The next question will appear in 5 seconds",
+                title: (
+                    <>
+                        The next question will appear in{" "}
+                        <Countdown
+                            date={Date.now() + 5000}
+                            renderer={({ seconds }) => (
+                                <span>{seconds}</span>
+                            )}
+                        />
+                    </>
+                ),
                 description: (
                     <TableContainer>
                         <Table colorScheme={"whiteAlpha"}>
@@ -74,7 +84,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                 duration: 5000,
                 isClosable: true,
                 variant: "subtle",
-                position: "bottom-right",
+                position: "top-left",
             });
             setTimeout(() => {
                 setQuestion(JSON.parse(message.match(/:(.+)/)![1]));
@@ -82,9 +92,11 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                 setButtonDisabled(false);
             }, 5000);
         } else if (message.startsWith("Game Over:")) {
-            navi("/result", {
-                state: JSON.parse(message.match(/:(.+)/)![1]),
-            });
+            setTimeout(() => {
+                navi("/result", {
+                    state: JSON.parse(message.match(/:(.+)/)![1]),
+                });
+            }, 3000);
         }
     }, [lastMessage, toast, navi]);
 
@@ -103,21 +115,28 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                             sendMessage(`Answer:${username}:${code}:No Answer`);
                             toast({
                                 title: "You failed to answer within the time limit",
+                                description: `The correct answer is ${currentQuestion.answer}`,
                                 status: "error",
                                 duration: 3000,
                                 isClosable: true,
                             });
                         }}
                         key={questionIndex}
-                        renderer={({ formatted }) => (
-                            <span>
-                                {formatted.minutes}:{formatted.seconds}
-                            </span>
-                        )}
+                        renderer={({ formatted }) => {
+                            if (isButtonDisabled) {
+                                return <span>00:00</span>;
+                            } else {
+                                return (
+                                    <span>
+                                        {formatted.minutes}:{formatted.seconds}
+                                    </span>
+                                );
+                            }
+                        }}
                     />
                 </TagLabel>
             </Tag>
-            <VStack textAlign="center" fontSize="large">
+            <VStack textAlign="center" >
                 <Heading>{currentQuestion.question}</Heading>
                 {currentQuestion.options.map((option, index) => (
                     <Button
@@ -149,7 +168,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                             } else {
                                 toast({
                                     title: "You answered incorrectly :(",
-                                    description: `The correct answer is ${currentQuestion.answer}`,
+                                    description: `The correct answer is ${currentQuestion.answer} but you chose ${option}`,
                                     status: "error",
                                     duration: 3000,
                                     isClosable: true,

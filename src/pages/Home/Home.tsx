@@ -31,8 +31,10 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
     const [code, setCode] = React.useState("");
     const [username, setUsername] = React.useState("");
     const navi = useNavigate();
+    const [isLoading, setLoading] = React.useState(false);
 
     React.useEffect(() => {
+        setLoading(false);
         const message = (lastMessage?.data as string) || "";
         if (message.includes("Access Code")) {
             navi("/lobby", {
@@ -149,7 +151,9 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
                     <ModalFooter>
                         <Button
                             colorScheme="teal"
+                            isLoading={isLoading}
                             onClick={() => {
+                                setLoading(true);
                                 if (code) {
                                     sendMessage(
                                         `Join Room:${username}:${code}`
