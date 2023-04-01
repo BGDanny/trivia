@@ -36,14 +36,14 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
     React.useEffect(() => {
         setLoading(false);
         const message = (lastMessage?.data as string) || "";
-        if (message.includes("Access Code")) {
+        if (message.startsWith("Access Code")) {
             navi("/lobby", {
                 state: {
                     code: message.match(/:(.+)/)![1],
                     usernames: [username],
                 },
             });
-        } else if (message.includes("Join Success")) {
+        } else if (message.startsWith("Join Success")) {
             navi("/lobby", {
                 state: {
                     code,
@@ -51,6 +51,14 @@ export const Home: React.FC<SocketProps> = ({ sendMessage, lastMessage }) => {
                         username,
                         ...message.match(/:(.+)/)![1].split(","),
                     ],
+                },
+            });
+        } else if (message.startsWith("Reconnect Success")) {
+            navi("/game", {
+                state: {
+                    initialQuestion: JSON.parse(message.match(/:(.+)/)![1]),
+                    code,
+                    username,
                 },
             });
         }

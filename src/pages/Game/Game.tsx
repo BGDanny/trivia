@@ -27,20 +27,24 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
     const navi = useNavigate();
     const totalQuestions = 10;
     const {
-        state: { question1, code, username },
+        state: { initialQuestion, code, username },
     } = useLocation();
     const toast = useToast();
     const [currentQuestion, setQuestion] = React.useState<{
         question: string;
         answer: string;
         options: string[];
-    }>(question1);
-    const [questionIndex, setQuestionIndex] = React.useState(1);
+    }>(initialQuestion);
+    const [questionIndex, setQuestionIndex] = React.useState(
+        +initialQuestion.round || 1
+    );
     const [isButtonDisabled, setButtonDisabled] = React.useState(false);
+    const timeLeft = React.useRef<number>(+initialQuestion.time || 30);
 
     React.useEffect(() => {
         const message = (lastMessage?.data as string) || "";
         if (message.startsWith("Everyone Responded:")) {
+            timeLeft.current = 30;
             const leaderboard: Array<{ username: string; points: string }> =
                 JSON.parse(message.match(/:(.+)/)![1]).leaderboard;
             toast({
@@ -49,9 +53,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                         The next question will appear in{" "}
                         <Countdown
                             date={Date.now() + 5000}
-                            renderer={({ seconds }) => (
-                                <span>{seconds}</span>
-                            )}
+                            renderer={({ seconds }) => <span>{seconds}</span>}
                         />
                     </>
                 ),
@@ -109,7 +111,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                 <TagLeftIcon as={TimeIcon} />
                 <TagLabel>
                     <Countdown
-                        date={Date.now() + 10000}
+                        date={Date.now() + timeLeft.current * 1000}
                         onComplete={() => {
                             setButtonDisabled(true);
                             sendMessage(`Answer:${username}:${code}:No Answer`);
@@ -136,7 +138,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                     />
                 </TagLabel>
             </Tag>
-            <VStack textAlign="center" >
+            <VStack textAlign="center">
                 <Heading>{currentQuestion.question}</Heading>
                 {currentQuestion.options.map((option, index) => (
                     <Button

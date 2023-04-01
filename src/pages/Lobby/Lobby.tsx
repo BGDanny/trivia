@@ -61,7 +61,7 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                     return { ...user, isReady: true };
                 })
             );
-            const question1 = JSON.parse(message.match(/:(.+)/)![1]);
+            const initialQuestion = JSON.parse(message.match(/:(.+)/)![1]);
             toast({
                 title: "Everyone is ready",
                 description:
@@ -73,7 +73,7 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             setTimeout(() => {
                 navi("/game", {
                     state: {
-                        question1,
+                        initialQuestion,
                         code,
                         username: usernames[0],
                     },
