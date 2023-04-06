@@ -62,6 +62,10 @@ export const App = () => {
                     duration: 5000,
                     isClosable: true,
                 });
+            } else if (message.startsWith("Connection Established")) {
+                if (window.location.pathname !== "/") {
+                    window.location.href = "/";
+                }
             }
             console.log(message);
         }
