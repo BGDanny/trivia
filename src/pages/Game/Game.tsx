@@ -27,16 +27,20 @@ import { SocketProps } from "../../types";
 import useWebSocket from "react-use-websocket";
 
 export const Game: React.FC<SocketProps> = (props) => {
-
-    const [wsUrl, setWsUrl] = React.useState("ws://68.146.50.113:6609/ws/client");
+    const [firstTime, setFirstTime] = React.useState(true);
+    const [wsUrl, setWsUrl] = React.useState("ws://68.146.50.113:7000/ws/client");
 
     const {
         sendMessage,
         lastMessage
-    } = useWebSocket(wsUrl, {
-        onError: () => setWsUrl("ws://68.146.50.113:6610/ws/client"),
+    } = useWebSocket("ws://68.146.50.113:7000/ws/client", {
+        onError: () => {
+            console.log("Reconnect to a new websocket");
+            setFirstTime(true);
+            setWsUrl("ws://68.146.50.113:7001/ws/client");
+        },
         retryOnError: true,
-        shouldReconnect: () => true,
+        shouldReconnect: () => false,
     });
 
     const navi = useNavigate();
@@ -54,12 +58,9 @@ export const Game: React.FC<SocketProps> = (props) => {
         +initialQuestion.round || 1
     );
     const [isButtonDisabled, setButtonDisabled] = React.useState(false);
-    const timeLeft = React.useRef<number>(+initialQuestion.time || 30);
-
     React.useEffect(() => {
         const message = (props.lastMessage?.data as string) || "";
         if (message.startsWith("Everyone Responded:")) {
-            timeLeft.current = 30;
             const leaderboard: Array<{ username: string; points: string }> =
                 JSON.parse(message.match(/:(.+)/)![1]).leaderboard;
             toast({
@@ -115,8 +116,6 @@ export const Game: React.FC<SocketProps> = (props) => {
 
     const [second, setSecondCountDown] = React.useState(35);
 
-    const [firstTime, setFirstTime] = React.useState(true);
-
     React.useEffect(() => {
         const message = (lastMessage?.data as string) ?? "";
         console.log(message);
@@ -127,11 +126,11 @@ export const Game: React.FC<SocketProps> = (props) => {
         }
 
         if (firstTime) {
-            setFirstTime(false);
             console.log("Sending Client Join message");
             sendMessage(`Client Join:${code}:${username}`);
+            setFirstTime(false);
         }
-    }, [lastMessage]);
+    }, [lastMessage, wsUrl]);
 
     React.useEffect(() => {
         if (second === 0) {
