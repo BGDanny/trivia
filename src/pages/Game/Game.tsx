@@ -17,13 +17,28 @@ import {
     Tbody,
     Td,
     TableContainer,
+    Text,
+    Spinner,
+    Center,
 } from "@chakra-ui/react";
 import { TimeIcon } from "@chakra-ui/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SocketProps } from "../../types";
-import Countdown from "react-countdown";
+import useWebSocket from "react-use-websocket";
 
-export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
+export const Game: React.FC<SocketProps> = (props) => {
+
+    const [wsUrl, setWsUrl] = React.useState("ws://68.146.50.113:6609/ws/client");
+
+    const {
+        sendMessage,
+        lastMessage
+    } = useWebSocket(wsUrl, {
+        onError: () => setWsUrl("ws://68.146.50.113:6610/ws/client"),
+        retryOnError: true,
+        shouldReconnect: () => true,
+    });
+
     const navi = useNavigate();
     const totalQuestions = 10;
     const {
@@ -42,7 +57,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
     const timeLeft = React.useRef<number>(+initialQuestion.time || 30);
 
     React.useEffect(() => {
-        const message = (lastMessage?.data as string) || "";
+        const message = (props.lastMessage?.data as string) || "";
         if (message.startsWith("Everyone Responded:")) {
             timeLeft.current = 30;
             const leaderboard: Array<{ username: string; points: string }> =
@@ -50,11 +65,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             toast({
                 title: (
                     <>
-                        The next question will appear in{" "}
-                        <Countdown
-                            date={Date.now() + 5000}
-                            renderer={({ seconds }) => <span>{seconds}</span>}
-                        />
+                        The next question is loading
                     </>
                 ),
                 description: (
@@ -100,7 +111,49 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                 });
             }, 3000);
         }
-    }, [lastMessage, toast, navi]);
+    }, [props.lastMessage, toast, navi]);
+
+    const [second, setSecondCountDown] = React.useState(35);
+
+    const [firstTime, setFirstTime] = React.useState(true);
+
+    React.useEffect(() => {
+        const message = (lastMessage?.data as string) ?? "";
+        console.log(message);
+        if (message.startsWith("Time:")) {
+            const second = parseInt(message.substring("Time:".length));
+            if (second <= 30)
+                setSecondCountDown(second);
+        }
+
+        if (firstTime) {
+            setFirstTime(false);
+            console.log("Sending Client Join message");
+            sendMessage(`Client Join:${code}:${username}`);
+        }
+    }, [lastMessage]);
+
+    React.useEffect(() => {
+        if (second === 0) {
+            setButtonDisabled(true);
+            props.sendMessage(`Answer:${username}:${code}:No Answer`);
+            toast({
+                title: "You failed to answer within the time limit",
+                description: `The correct answer is ${currentQuestion.answer}`,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    }, [second]);
+
+    /**
+     * Make sure that you don't show the question when the backend processing in buffer time
+     */
+    if (second > 30)
+        return <Center>
+            <Spinner />
+        </Center>
 
     return (
         <Box>
@@ -110,32 +163,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             <Tag float={"right"}>
                 <TagLeftIcon as={TimeIcon} />
                 <TagLabel>
-                    <Countdown
-                        date={Date.now() + timeLeft.current * 1000}
-                        onComplete={() => {
-                            setButtonDisabled(true);
-                            sendMessage(`Answer:${username}:${code}:No Answer`);
-                            toast({
-                                title: "You failed to answer within the time limit",
-                                description: `The correct answer is ${currentQuestion.answer}`,
-                                status: "error",
-                                duration: 3000,
-                                isClosable: true,
-                            });
-                        }}
-                        key={questionIndex}
-                        renderer={({ formatted }) => {
-                            if (isButtonDisabled) {
-                                return <span>00:00</span>;
-                            } else {
-                                return (
-                                    <span>
-                                        {formatted.minutes}:{formatted.seconds}
-                                    </span>
-                                );
-                            }
-                        }}
-                    />
+                    <Text>{second}</Text>
                 </TagLabel>
             </Tag>
             <VStack textAlign="center">
@@ -158,7 +186,7 @@ export const Game: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
                         py={5}
                         onClick={() => {
                             setButtonDisabled(true);
-                            sendMessage(`Answer:${username}:${code}:${option}`);
+                            props.sendMessage(`Answer:${username}:${code}:${option}`);
                             if (currentQuestion.answer === option) {
                                 toast({
                                     title: "You selected the correct option :)",

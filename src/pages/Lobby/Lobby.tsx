@@ -65,7 +65,7 @@ export const Lobby: React.FC<SocketProps> = ({ lastMessage, sendMessage }) => {
             toast({
                 title: "Everyone is ready",
                 description:
-                    "You will be redirected to the game page in 3 seconds",
+                    "First game question is loading",
                 status: "success",
                 duration: 3000,
                 isClosable: true,
