@@ -28,20 +28,9 @@ import useWebSocket from "react-use-websocket";
 
 export const Game: React.FC<SocketProps> = (props) => {
     const [firstTime, setFirstTime] = React.useState(true);
-    const [wsUrl, setWsUrl] = React.useState("ws://68.146.50.113:7000/ws/client");
 
-    const {
-        sendMessage,
-        lastMessage
-    } = useWebSocket("ws://68.146.50.113:7000/ws/client", {
-        onError: () => {
-            console.log("Reconnect to a new websocket");
-            setFirstTime(true);
-            setWsUrl("ws://68.146.50.113:7001/ws/client");
-        },
-        retryOnError: true,
-        shouldReconnect: () => false,
-    });
+    const ws1 = useWebSocket("ws://68.146.50.113:7000/ws/client");
+    const ws2 = useWebSocket("ws://68.146.50.113:7001/ws/client");
 
     const navi = useNavigate();
     const totalQuestions = 10;
@@ -58,6 +47,9 @@ export const Game: React.FC<SocketProps> = (props) => {
         +initialQuestion.round || 1
     );
     const [isButtonDisabled, setButtonDisabled] = React.useState(false);
+
+    const [second, setSecondCountDown] = React.useState(35);
+    
     React.useEffect(() => {
         const message = (props.lastMessage?.data as string) || "";
         if (message.startsWith("Everyone Responded:")) {
@@ -114,10 +106,8 @@ export const Game: React.FC<SocketProps> = (props) => {
         }
     }, [props.lastMessage, toast, navi]);
 
-    const [second, setSecondCountDown] = React.useState(35);
-
     React.useEffect(() => {
-        const message = (lastMessage?.data as string) ?? "";
+        const message = (ws1.lastMessage?.data as string) ?? "";
         console.log(message);
         if (message.startsWith("Time:")) {
             const second = parseInt(message.substring("Time:".length));
@@ -127,10 +117,28 @@ export const Game: React.FC<SocketProps> = (props) => {
 
         if (firstTime) {
             console.log("Sending Client Join message");
-            sendMessage(`Client Join:${code}:${username}`);
+            ws1.sendMessage(`Client Join:${code}:${username}`);
+            ws2.sendMessage(`Client Join:${code}:${username}`);
             setFirstTime(false);
         }
-    }, [lastMessage, wsUrl]);
+    }, [ws1.lastMessage]);
+
+    React.useEffect(() => {
+        const message = (ws2.lastMessage?.data as string) ?? "";
+        console.log(message);
+        if (message.startsWith("Time:")) {
+            const second = parseInt(message.substring("Time:".length));
+            if (second <= 30)
+                setSecondCountDown(second);
+        }
+
+        if (firstTime) {
+            console.log("Sending Client Join message");
+            ws1.sendMessage(`Client Join:${code}:${username}`);
+            ws2.sendMessage(`Client Join:${code}:${username}`);
+            setFirstTime(false);
+        }
+    }, [ws2.lastMessage]);
 
     React.useEffect(() => {
         if (second === 0) {
